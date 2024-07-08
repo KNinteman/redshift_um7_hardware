@@ -1,0 +1,9 @@
+<library path="redshift_um7_hardware">
+    <class name="redshift_um7_hardware/RedshiftUm7Hardware"
+        type="redshift_um7_hardware::RedshiftUm7Hardware"
+        base_class_type="hardware_interface::SensorInterface">
+        <description>
+            This is a hardware interface
+        </description>
+    </class>
+</library>
