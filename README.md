@@ -24,42 +24,41 @@ To begin using redshift_um7_hardware, follow these steps:
 ## Configuration
 Before using the package, it needs to be properly configured. Here are some steps to consider:
 
-- Customize the feedback received from the motor controller by editing the /config/query.yaml file.
 - Set up a ros2_control tag in your robot's URDF according to the template provided below:
 ```
-              <ros2_control name="UM7Interface" type="sensor">
-                <hardware>
-                    <plugin>redshift_um7_hardware/RedshiftUm7Hardware</plugin>
-                    <param name="serial_port"></param> <!--string-->
-                    <param name="baud_rate"></param> <!--int-->
-                    <param name="update_rate"></param> <!--int-->
-                    <param name="frame_id"></param> <!--string-->
-                    <param name="mag_updates"></param> <!--bool-->
-                    <param name="quat_mode"></param> <!--bool-->
-                    <param name="zero_gyros"></param> <!--bool-->
-                    <param name="tf_ned_to_enu"></param> <!--bool-->
-                    <param name="orientation_in_robot_frame"></param> <!--bool-->
-                </hardware>
+<ros2_control name="UM7Interface" type="sensor">
+   <hardware>
+      <plugin>redshift_um7_hardware/RedshiftUm7Hardware</plugin>
+      <param name="serial_port"></param> <!--string-->
+      <param name="baud_rate"></param> <!--int-->
+      <param name="update_rate"></param> <!--int-->
+      <param name="frame_id"></param> <!--string-->
+      <param name="mag_updates"></param> <!--bool-->
+      <param name="quat_mode"></param> <!--bool-->
+      <param name="zero_gyros"></param> <!--bool-->
+      <param name="tf_ned_to_enu"></param> <!--bool-->
+      <param name="orientation_in_robot_frame"></param> <!--bool-->
+  </hardware>
 
-                <sensor name="redshift_um7_hardware">
-                    <state_interface name="orientation.x"/>
-                    <state_interface name="orientation.y"/>
-                    <state_interface name="orientation.z"/>
-                    <state_interface name="orientation.w"/>
-                    <state_interface name="angular_velocity.x"/>
-                    <state_interface name="angular_velocity.y"/>
-                    <state_interface name="angular_velocity.z"/>
-                    <state_interface name="linear_acceleration.x"/>
-                    <state_interface name="linear_acceleration.y"/>
-                    <state_interface name="linear_acceleration.z"/>
-                    <state_interface name="magnetic_field.x"/>
-                    <state_interface name="magnetic_field.y"/>
-                    <state_interface name="magnetic_field.z"/>
-                    <state_interface name="vector.x"/>
-                    <state_interface name="vector.y"/>
-                    <state_interface name="vector.z"/>
-                </sensor>
-            </ros2_control>
+  <sensor name="redshift_um7_hardware">
+      <state_interface name="orientation.x"/>
+      <state_interface name="orientation.y"/>
+      <state_interface name="orientation.z"/>
+      <state_interface name="orientation.w"/>
+      <state_interface name="angular_velocity.x"/>
+      <state_interface name="angular_velocity.y"/>
+      <state_interface name="angular_velocity.z"/>
+      <state_interface name="linear_acceleration.x"/>
+      <state_interface name="linear_acceleration.y"/>
+      <state_interface name="linear_acceleration.z"/>
+      <state_interface name="magnetic_field.x"/>
+      <state_interface name="magnetic_field.y"/>
+      <state_interface name="magnetic_field.z"/>
+      <state_interface name="vector.x"/>
+      <state_interface name="vector.y"/>
+      <state_interface name="vector.z"/>
+   </sensor>
+</ros2_control>
 ```
 Ensure that you fill in the necessary parameters such as serial_port, baud_rate, etc., based on your specific hardware setup.
 
