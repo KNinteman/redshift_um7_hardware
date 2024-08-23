@@ -69,5 +69,8 @@ Double-check your serial communication settings to ensure they match those speci
 Verify that all dependencies, including the serial package, are properly installed and built.
 Refer to the ROS 2 documentation or community forums for additional support if needed.
 
+## Output
+The resulting data is visivle at the topic /dynamic_joint_states.
+
 ## Acknowledgments
 I would like to acknowledge the contributions of the ROS 2 community, the developers of the ros2_control and serial packages and Clearpath Robotics for their support.
