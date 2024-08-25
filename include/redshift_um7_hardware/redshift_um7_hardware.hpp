@@ -29,13 +29,13 @@
 /**
  *
  *  \file
- *  \brief      Implementation of Comms class methods to handle reading and
- *              writing to the UM7 serial interface.
- *  \author     Mike Purvis <mpurvis@clearpathrobotics.com>
+ *  \brief      Main entry point for UM7 driver. Handles serial connection
+ *              details, as well as all ROS message stuffing, parameters,
+ *              topics, etc.
+ *  \author     Mike Purvis <mpurvis@clearpathrobotics.com> (original code for UM6/7 in ROS1)
+ *  \author     Alex Brown <rbirac@cox.net>		    (adapted to UM7)
  *  \author     Hilary Luo <hluo@clearpathrobotics.com> (updated to ROS 2 and combined UM6 and UM7)
  *  \copyright  Copyright (c) 2023, Clearpath Robotics, Inc.
- *
- * Please send comments, questions, or patches to code@clearpathrobotics.com
  *
  */
 
@@ -124,16 +124,16 @@ namespace redshift_um7_hardware
                 void configure_sensor();
             
             REDSHIFT_UM7_HARDWARE_PUBLIC
-                void processSensorData(const redshift_um7_hardware::Registers& registers);
+                void process_sensor_data(const redshift_um7_hardware::Registers& registers);
             
             REDSHIFT_UM7_HARDWARE_PUBLIC
-                void processENUOrientation(const redshift_um7_hardware::Registers& registers);
+                void process_ENU_orientation(const redshift_um7_hardware::Registers& registers);
 
             REDSHIFT_UM7_HARDWARE_PUBLIC
-                void processRobotFrameOrientation(const redshift_um7_hardware::Registers& registers);
+                void process_robot_frame_orientation(const redshift_um7_hardware::Registers& registers);
 
             REDSHIFT_UM7_HARDWARE_PUBLIC
-                void processDefaultOrientation(const redshift_um7_hardware::Registers& registers);
+                void process_default_orientation(const redshift_um7_hardware::Registers& registers);
 
             template<typename RegT>
             REDSHIFT_UM7_HARDWARE_PUBLIC

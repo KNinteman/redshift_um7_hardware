@@ -29,8 +29,8 @@
 /**
  *
  *  \file
- *  \brief      Implementation of Comms class methods to handle reading and
- *              writing to the UM7 serial interface.
+ *  \brief      Comms class definition. Does not manage the serial connection
+ *              itself, but takes care of reading and writing to UM7.
  *  \author     Mike Purvis <mpurvis@clearpathrobotics.com>
  *  \author     Hilary Luo <hluo@clearpathrobotics.com> (updated to ROS 2 and combined UM6 and UM7)
  *  \copyright  Copyright (c) 2023, Clearpath Robotics, Inc.

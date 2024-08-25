@@ -29,13 +29,14 @@
 /**
  *
  *  \file
- *  \brief      Implementation of Comms class methods to handle reading and
- *              writing to the UM7 serial interface.
- *  \author     Mike Purvis <mpurvis@clearpathrobotics.com>
+ *  \brief      Main entry point for UM7 driver. Handles serial connection
+ *              details, as well as all ROS message stuffing, parameters,
+ *              topics, etc.
+ *  \author     Mike Purvis <mpurvis@clearpathrobotics.com> (original code for UM6)
+ *  \author     Alex Brown <rbirac@cox.net> (adapted to UM7)
+ *  \copyright  Copyright (c) 2015, Alex Brown.
  *  \author     Hilary Luo <hluo@clearpathrobotics.com> (updated to ROS 2 and combined UM6 and UM7)
  *  \copyright  Copyright (c) 2023, Clearpath Robotics, Inc.
- *
- * Please send comments, questions, or patches to code@clearpathrobotics.com
  *
  */
 
@@ -53,22 +54,17 @@
 namespace redshift_um7_hardware
 {
     /**
-    * @brief Initializes the hardware with the provided configuration.
+    * @brief Initialises the hardware with the provided configuration.
     *
-    * This method initializes the hardware with the configuration provided in the hardware info object.
-    * It calls the base class's on_init method and checks for success. If the base class initialization
-    * fails, it returns an error status. Otherwise, it extracts hardware parameters such as serial port,
-    * baud rate, update rate, frame ID, etc., from the hardware info object and initializes internal
-    * variables accordingly. If any hardware parameter is missing or has an invalid value, it logs a
-    * corresponding error and returns an error status. Finally, it initializes hardware state vectors
-    * with NaNs to indicate uninitialized state and returns a success status.
+    * This method initialises the hardware with the configuration provided in the hardware info parameters.
+    * It calls the base class's on_init method and checks for success.
+    * It extracts hardware parameters from the hardware info object and initialises internal
+    * variables. It initialises hardware state vectors with NaNs and returns a success status.
     *
     * @param info The hardware info object containing configuration parameters.
-    * @return hardware_interface::CallbackReturn The initialization status, indicating whether the
-    * initialization was successful or if an error occurred.
+    * @return hardware_interface::CallbackReturn The initialisation status.
     */
     hardware_interface::CallbackReturn RedshiftUm7Hardware::on_init(const hardware_interface::HardwareInfo &info) {
-        // Call base class on_init and check for success
         if (hardware_interface::SensorInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS) {
             return hardware_interface::CallbackReturn::ERROR;
         }
@@ -92,7 +88,7 @@ namespace redshift_um7_hardware
             return hardware_interface::CallbackReturn::ERROR;
         }
 
-        // Initialize hardware state vectors with NaNs
+        // Initialise hardware state vectors with NaNs
         hw_orientation_.resize(4, std::numeric_limits<double>::quiet_NaN());
         hw_angular_velocity_.resize(3, std::numeric_limits<double>::quiet_NaN());
         hw_linear_acceleration_.resize(3, std::numeric_limits<double>::quiet_NaN());
@@ -105,10 +101,7 @@ namespace redshift_um7_hardware
     /**
     * @brief Exports state interfaces for sensor data.
     *
-    * This method exports state interfaces for sensor data. It constructs state interfaces for
-    * orientation, angular velocity, linear acceleration, magnetic field, and vector data,
-    * populates them with appropriate values from internal hardware state vectors, and returns
-    * a vector containing these state interfaces.
+    * This method exports state interfaces for sensor data. 
     *
     * @return std::vector<hardware_interface::StateInterface> A vector containing state interfaces
     * for sensor data.
@@ -147,10 +140,7 @@ namespace redshift_um7_hardware
     * @brief Configures the hardware based on provided parameters.
     *
     * This method configures the hardware based on the parameters provided in the configuration object.
-    * It sets up the serial port with the specified parameters, opens the port, and initializes the
-    * axis options for output data. If the configuration indicates conflicting options for orientation
-    * frames, it logs an error. If the serial port configuration encounters an error, it returns an error
-    * status. If the port is successfully opened, it logs a message indicating successful initialization.
+    * It sets up the serial port with the specified parameters and opens the port.
     *
     * @param previous_state The previous state of the hardware lifecycle.
     * @return hardware_interface::CallbackReturn The configuration status, indicating whether the
@@ -173,13 +163,12 @@ namespace redshift_um7_hardware
                 axes_ = OutputAxisOptions::ROBOT_FRAME;
             }
         } catch (serial::IOException &e) {
-            // Handle serial port configuration error
             return hardware_interface::CallbackReturn::ERROR;
         }
 
         if (ser_.isOpen()) {
-            // If the port is open, log a message indicating successful initialization
-            RCLCPP_INFO_STREAM(rclcpp::get_logger("RedshiftUm7Hardware"), "Serial Port " << conf_.serial_port << " initialized.");
+            // If the port is open, log a message indicating successful initialisation
+            RCLCPP_INFO_STREAM(rclcpp::get_logger("RedshiftUm7Hardware"), "Serial Port " << conf_.serial_port << " initialised.");
         } else {
             // If the port is not open, log a message indicating failure and shutdown the ROS node
             RCLCPP_ERROR_STREAM(rclcpp::get_logger("RedshiftUm7Hardware"), "Serial Port " << conf_.serial_port << " is not open.");
@@ -192,31 +181,23 @@ namespace redshift_um7_hardware
     /**
     * @brief Cleans up resources and performs finalization tasks.
     *
-    * This method cleans up resources associated with the hardware and performs finalization tasks.
-    * It checks if the serial port is open and closes it if so. It logs messages to indicate the
-    * status of the port closure and any errors encountered during the process. Finally, it logs
-    * a message indicating successful cleanup.
+    * This method closes the serial port.
     *
-    * @param previous_state The previous state of the hardware lifecycle.
-    * @return hardware_interface::CallbackReturn The cleanup status, indicating whether the
-    * cleanup was successful or if an error occurred.
+    * @param previous_state The previous lifecycle state of the hardware component.
+    * @return CallbackReturn Returns a status indicating the success or failure of the cleanup process.
     */
     hardware_interface::CallbackReturn RedshiftUm7Hardware::on_cleanup(const rclcpp_lifecycle::State & /*previous_state*/) {
         try {
-            // Check if the serial port is open and close it if so
             if (ser_.isOpen()) {
                 ser_.close();
                 RCLCPP_INFO_STREAM(rclcpp::get_logger("RedshiftUm7Hardware"), "Serial Port " << conf_.serial_port << " closed.");
             } else {
-                // Log a warning if the serial port was not open
                 RCLCPP_ERROR_STREAM(rclcpp::get_logger("RedshiftUm7Hardware"), "Serial Port " << conf_.serial_port << " was not open.");
             }
         } catch (const serial::IOException &e) {
-            // Log an error if an exception occurs during the closing process
             RCLCPP_ERROR_STREAM(rclcpp::get_logger("RedshiftUm7Hardware"), "Error while closing serial port: " << e.what());
         }
 
-        // Log a message indicating successful cleanup
         RCLCPP_INFO_STREAM(rclcpp::get_logger("RedshiftUm7Hardware"), "Successfully cleaned up!");
 
         return hardware_interface::CallbackReturn::SUCCESS;
@@ -228,8 +209,7 @@ namespace redshift_um7_hardware
     * This method configures the sensor with the provided settings such as communication rate,
     * update rate, broadcast rate, etc. It constructs command packets based on the settings and
     * sends them to the sensor, waiting for acknowledgment after each command. If any command fails
-    * to be acknowledged, a runtime error is thrown. Additionally, if gyroscopes need to be zeroed,
-    * a command to zero gyroscopes is sent.
+    * to be acknowledged, a runtime error is thrown. 
     */
     void RedshiftUm7Hardware::configure_sensor()
     {
@@ -241,7 +221,6 @@ namespace redshift_um7_hardware
             throw std::runtime_error("Unable to set CREG_COM_SETTINGS.");
         }
 
-        // set the broadcast rate of the device
         int rate = conf_.update_rate;
 
         uint32_t rate_bits = static_cast<uint32_t>(rate);
@@ -263,13 +242,13 @@ namespace redshift_um7_hardware
             throw std::runtime_error("Unable to set CREG_COM_RATES5.");
         }
 
-        uint32_t health_rate = (5 << RATE6_HEALTH_START);  // note:  5 gives 2 hz rate
+        uint32_t health_rate = (5 << RATE6_HEALTH_START);  // 5 gives 2 hz rate
         r.comrate6.set(0, health_rate);
         if (!sensor_->sendWaitAck(r.comrate6)) {
             throw std::runtime_error("Unable to set CREG_COM_RATES6.");
         }
 
-        uint32_t misc_config_reg = 0;  // initialize all options off
+        uint32_t misc_config_reg = 0; 
 
         if (conf_.mag_updates) {
             misc_config_reg |= MAG_UPDATES_ENABLED;
@@ -294,8 +273,7 @@ namespace redshift_um7_hardware
     *
     * This method activates the hardware for operation by resetting the sensor communication object,
     * creating a new communication object with the serial port, and configuring the sensor using the
-    * provided settings. If any error occurs during this process, such as failure to open the serial
-    * port or configure the hardware, an error status is returned.
+    * provided settings.
     *
     * @param previous_state The previous lifecycle state (unused).
     * @return hardware_interface::CallbackReturn The activation status, indicating whether the activation
@@ -303,7 +281,6 @@ namespace redshift_um7_hardware
     */
     hardware_interface::CallbackReturn RedshiftUm7Hardware::on_activate(const rclcpp_lifecycle::State & /*previous_state*/)
     {
-        // Check if the serial port is open
         if (!ser_.isOpen()) {
             RCLCPP_ERROR(
                 rclcpp::get_logger("RedshiftUm7Hardware"), 
@@ -325,15 +302,11 @@ namespace redshift_um7_hardware
     }
 
     /**
-    * @brief Deactivates the hardware.
-    *
-    * This method deactivates the hardware, indicating that it is no longer in operation. It logs
-    * messages indicating the deactivation process and returns a success status.
-    *
-    * @param previous_state The previous lifecycle state.
-    * @return hardware_interface::CallbackReturn The deactivation status, indicating that the deactivation
-    * was successful.
-    */
+     * @brief Deactivates the hardware components.
+     * 
+     * Currently not implemented.
+     * 
+     */
     hardware_interface::CallbackReturn RedshiftUm7Hardware::on_deactivate(const rclcpp_lifecycle::State & /*previous_state*/)
     {
         RCLCPP_INFO_STREAM(rclcpp::get_logger("RedshiftUm7Hardware"), "Deactivating ...please wait...");
@@ -345,8 +318,7 @@ namespace redshift_um7_hardware
     /**
     * @brief Sends a command to the UM7 device.
     *
-    * This method generalizes sending a command to the UM7 device and waits for acknowledgment. If the command
-    * fails to be sent or acknowledged, it throws a runtime error indicating the failure.
+    * This method generalizes sending a command to the UM7 device.
     *
     * @tparam RegT The type of register to which the command is sent.
     * @param reg The register accessor containing the command to be sent.
@@ -364,23 +336,21 @@ namespace redshift_um7_hardware
     /**
     * @brief Processes sensor data based on the specified output axis option.
     *
-    * This method processes sensor data based on the specified output axis option. It determines
-    * the appropriate orientation processing function to call based on the value of the axes_
-    * variable. If the value of axes_ is invalid, it logs an error.
+    * This method processes sensor data based on the specified output axis option.
     *
     * @param registers The sensor registers containing the data to be processed.
     */
-    void RedshiftUm7Hardware::processSensorData(const redshift_um7_hardware::Registers& registers)
+    void RedshiftUm7Hardware::process_sensor_data(const redshift_um7_hardware::Registers& registers)
     {
         switch (axes_) {
             case OutputAxisOptions::ENU:
-                processENUOrientation(registers);
+                process_ENU_orientation(registers);
                 break;
             case OutputAxisOptions::ROBOT_FRAME:
-                processRobotFrameOrientation(registers);
+                process_robot_frame_orientation(registers);
                 break;
             case OutputAxisOptions::DEFAULT:
-                processDefaultOrientation(registers);
+                process_default_orientation(registers);
                 break;
             default:
                 RCLCPP_ERROR_STREAM(rclcpp::get_logger("RedshiftUm7Hardware"), "OuputAxes enum value invalid");
@@ -391,13 +361,11 @@ namespace redshift_um7_hardware
     * @brief Processes orientation data for the ENU axis option.
     *
     * This method processes orientation data received from the sensor for the East-North-Up (ENU)
-    * axis option. It performs necessary transformations to convert the sensor data to ROS standard
-    * coordinate conventions. The processed data includes orientation, angular velocity, linear
-    * acceleration, magnetic field, and Euler attitudes.
+    * axis option. 
     *
     * @param registers The sensor registers containing the raw data to be processed.
     */
-    void RedshiftUm7Hardware::processENUOrientation(const redshift_um7_hardware::Registers& registers)
+    void RedshiftUm7Hardware::process_ENU_orientation(const redshift_um7_hardware::Registers& registers)
     {
         // Process orientation data for ENU axis option
         hw_orientation_[0] = registers.quat.get_scaled(1);
@@ -430,13 +398,11 @@ namespace redshift_um7_hardware
     * @brief Processes orientation data for the robot frame axis option.
     *
     * This method processes orientation data received from the sensor for the robot frame
-    * axis option. It performs necessary transformations to convert the sensor data to ROS standard
-    * coordinate conventions for the robot frame. The processed data includes orientation, angular
-    * velocity, linear acceleration, magnetic field, and Euler attitudes.
+    * axis option. 
     *
     * @param registers The sensor registers containing the raw data to be processed.
     */
-    void RedshiftUm7Hardware::processRobotFrameOrientation(const redshift_um7_hardware::Registers& registers)
+    void RedshiftUm7Hardware::process_robot_frame_orientation(const redshift_um7_hardware::Registers& registers)
     {
         // Process orientation data for robot frame axis option
         hw_orientation_[0] = -registers.quat.get_scaled(1);
@@ -469,13 +435,11 @@ namespace redshift_um7_hardware
     * @brief Processes orientation data for the robot frame axis option.
     *
     * This method processes orientation data received from the sensor for the default
-    * axis option. It performs necessary transformations to convert the sensor data to ROS standard
-    * coordinate conventions. The processed data includes orientation, angular
-    * velocity, linear acceleration, magnetic field, and Euler attitudes.
+    * axis option.
     *
     * @param registers The sensor registers containing the raw data to be processed.
     */
-    void RedshiftUm7Hardware::processDefaultOrientation(const redshift_um7_hardware::Registers& registers)
+    void RedshiftUm7Hardware::process_default_orientation(const redshift_um7_hardware::Registers& registers)
     {
         // Process orientation data for default axis option
         hw_orientation_[0] = registers.quat.get_scaled(1);
@@ -505,9 +469,7 @@ namespace redshift_um7_hardware
     /**
     * @brief Reads data from the sensor and processes it.
     *
-    * This method reads data from the sensor connected via the serial port. It checks if the serial port
-    * is open, and if not, logs an error message and returns an error status. Otherwise, it retrieves sensor
-    * data, processes it, and returns an OK status.
+    * This method reads data from the sensor connected via the serial port.
     *
     * @param time The current time.
     * @param period The duration between reads.
@@ -531,7 +493,7 @@ namespace redshift_um7_hardware
         }
 
         if (input == TRIGGER_PACKET) {
-            processSensorData(registers_);
+            process_sensor_data(registers_);
         }
         return hardware_interface::return_type::OK;
     }
